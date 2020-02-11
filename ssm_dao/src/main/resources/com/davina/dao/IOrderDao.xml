@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.davina.dao.IOrderDao">
+    <delete id="deleteByProductId">
+        DELETE FROM orders o WHERE 1=1
+            <if test="array != null and array.length > 0">
+              <foreach collection="array" open=" and o.productid in (" close=")" item="temp" separator=",">
+                  #{temp}
+              </foreach>
+            </if>
+    </delete>
+</mapper>

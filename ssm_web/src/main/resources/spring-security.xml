@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <!--放行资源-->
+    <security:http pattern="/login.jsp" security="none"/>
+    <security:http pattern="/failer.jsp" security="none"/>
+    <security:http pattern="/favicon.ico" security="none"/>
+    <security:http pattern="/css/**" security="none"/>
+    <security:http pattern="/img/**" security="none"/>
+    <security:http pattern="/plugins/**" security="none"/>
+
+    <!--
+       2. 登陆认证相关配置
+          auto-config
+               是否自动生成登陆页面。
+               true表示会自动生成登陆页面，如果自己有指定登陆页面，以自己指定的为准。
+          use-expressions
+               是否使用SpEL表达式. false 表示不使用
+          intercept-url 拦截哪些资源。
+               pattern 表示拦截的资源。
+               access 这些拦截的资源要求用户具有的的角色（权限）。
+           security:form-login 登陆表单配置（登陆页面、提交地址、用户名密码参数、登陆成功默认进入的页面、登陆失败对应的页面）
+           security:logout     退出配置
+   -->
+    <security:http auto-config="true" use-expressions="true">
+        <security:intercept-url pattern="/**" access="hasAnyRole('ROLE_USER','ROLE_ADMIN')"/>
+
+        <security:form-login login-page="/login.jsp" login-processing-url="/login" username-parameter="username" password-parameter="password" default-target-url="/index.jsp" authentication-failure-url="/failer.jsp"/>
+
+        <security:logout logout-url="/logout" logout-success-url="/login.jsp" invalidate-session="true"/>
+
+        <!--关闭跨域请求的校验-->
+        <security:csrf disabled="true"/>
+    </security:http>
+
+    <!--配置登陆认证需要引用容器中的service对象。-->
+    <security:authentication-manager>
+        <!--user-service-ref 登陆时候会调用到的service对象，引用容器中的service。-->
+        <!--要求userService必须要实现接口：UserDetailsService-->
+        <security:authentication-provider user-service-ref="userService">
+            <security:password-encoder ref="bCryptPasswordEncoder"/>
+        </security:authentication-provider>
+
+    </security:authentication-manager>
+
+    <bean id="bCryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+
+    <!--
+     Spring-security权限校验的三种方式：
+     方式1：jsr-250提供的权限校验注解支持
+           使用步骤：
+             1. 添加依赖；
+             2. springmvc.xml开启aop自动代理；
+                <aop:aspectj-autoproxy proxy-target-class="true"/>
+             3. 开启注解支持
+                 <security:global-method-security jsr250-annotations="enabled"/>
+             4. 使用注解
+                 @RolesAllowed 使用注解进行权限校验
+      方式2：springsecurity提供的权限校验注解
+           使用步骤：
+             1. 开启注解支持
+                <security:global-method-security secured-annotations="enabled"/>
+             2. 使用注解
+                @Secured   注解进行权限校验
+
+      方式3：SpEL 表达式提供的权限校验注解
+           使用步骤：
+             1. 开启注解支持
+                 <security:global-method-security pre-post-annotations="enabled"/>
+             2. 使用注解
+                 @PreAuthorize 注解进行权限校验
+ -->
+
+    <security:global-method-security pre-post-annotations="enabled"/>
+
+</beans>
